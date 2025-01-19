@@ -23,8 +23,11 @@ ENV PYTHONPATH=/app
 # Create necessary directories if they don't exist
 RUN mkdir -p /app/app/static/images
 
+# Make sure app directory is a Python package
+RUN touch /app/app/__init__.py
+
 # Expose the port
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--log-level", "debug"]

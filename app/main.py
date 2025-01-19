@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from pathlib import Path
 import logging
-import database
+from . import database
 
 # Configure logging
 logging.basicConfig(
