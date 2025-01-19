@@ -8,26 +8,22 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker cache
+# Copy requirements first
 COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire application
-COPY . .
+# Copy the application code
+COPY app app/
 
 # Set environment variables
-ENV DEBUG=false
-ENV PORT=8000
-ENV PYTHONPATH=/app
-
-# Create necessary directories if they don't exist
-RUN mkdir -p /app/app/static/images
-
-# Make sure app directory is a Python package
-RUN touch /app/app/__init__.py
+ENV PYTHONPATH=/app \
+    PORT=8000 \
+    DEBUG=false
 
 # Expose the port
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--log-level", "debug"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

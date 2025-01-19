@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from typing import List, Dict, Any, Optional
 from enum import Enum
 import json
@@ -17,14 +17,15 @@ from . import database
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Get base directory
+# Get the base directory
 BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+TEMPLATES_DIR = BASE_DIR / "templates"
 
 # Set debug mode
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
@@ -56,24 +57,22 @@ app.add_middleware(
 
 try:
     # Mount static files
-    static_dir = BASE_DIR / "static"
-    logger.info(f"Mounting static files from: {static_dir}")
-    logger.info(f"Static directory exists: {static_dir.exists()}")
-    if static_dir.exists():
-        logger.info(f"Static directory contents: {[f.name for f in static_dir.glob('**/*') if f.is_file()]}")
-        app.mount("/static", StaticFiles(directory=str(static_dir), html=True), name="static")
+    logger.info(f"Mounting static files from: {STATIC_DIR}")
+    logger.info(f"Static directory exists: {STATIC_DIR.exists()}")
+    if STATIC_DIR.exists():
+        logger.info(f"Static directory contents: {[f.name for f in STATIC_DIR.glob('**/*') if f.is_file()]}")
+        app.mount("/static", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
     else:
-        raise Exception(f"Static directory not found at {static_dir}")
+        raise Exception(f"Static directory not found at {STATIC_DIR}")
 
     # Set up templates
-    templates_dir = BASE_DIR / "templates"
-    logger.info(f"Setting up templates from: {templates_dir}")
-    logger.info(f"Templates directory exists: {templates_dir.exists()}")
-    if templates_dir.exists():
-        logger.info(f"Templates directory contents: {[f.name for f in templates_dir.glob('*') if f.is_file()]}")
-        templates = Jinja2Templates(directory=str(templates_dir))
+    logger.info(f"Setting up templates from: {TEMPLATES_DIR}")
+    logger.info(f"Templates directory exists: {TEMPLATES_DIR.exists()}")
+    if TEMPLATES_DIR.exists():
+        logger.info(f"Templates directory contents: {[f.name for f in TEMPLATES_DIR.glob('*') if f.is_file()]}")
+        templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
     else:
-        raise Exception(f"Templates directory not found at {templates_dir}")
+        raise Exception(f"Templates directory not found at {TEMPLATES_DIR}")
 except Exception as e:
     logger.error(f"Error setting up static files or templates: {str(e)}")
     logger.exception("Full traceback:")
@@ -159,10 +158,10 @@ def get_prize_status() -> Dict:
         }
     }
 
-@app.get("/")
-async def read_root(request: Request):
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """Root endpoint"""
     try:
-        # Get initial prize status
         prize_status = database.get_prize_status()
         winners = database.get_winners()
         participants = load_participants()
@@ -177,9 +176,14 @@ async def read_root(request: Request):
             }
         )
     except Exception as e:
-        logger.error(f"Error in read_root: {str(e)}")
-        logger.exception("Full traceback:")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error in root endpoint: {str(e)}")
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "error": str(e)
+            }
+        )
 
 @app.get("/draw")
 async def draw():
@@ -280,6 +284,30 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 # Initialize database on startup
 @app.on_event("startup")
 async def startup_event():
+    """Log application startup information"""
+    logger.info(f"Starting application with DEBUG={os.getenv('DEBUG', 'False')}, PORT={os.getenv('PORT', '8000')}")
+    logger.info(f"Base directory: {BASE_DIR}")
+    logger.info(f"Current working directory: {os.getcwd()}")
+    logger.info(f"Python path: {sys.path}")
+    
+    # Log static files information
+    logger.info(f"Static directory path: {STATIC_DIR}")
+    if STATIC_DIR.exists():
+        logger.info("Static directory exists")
+        static_files = [f.name for f in STATIC_DIR.iterdir()]
+        logger.info(f"Static files: {static_files}")
+    else:
+        logger.warning("Static directory does not exist")
+    
+    # Log templates information
+    logger.info(f"Templates directory path: {TEMPLATES_DIR}")
+    if TEMPLATES_DIR.exists():
+        logger.info("Templates directory exists")
+        template_files = [f.name for f in TEMPLATES_DIR.iterdir()]
+        logger.info(f"Template files: {template_files}")
+    else:
+        logger.warning("Templates directory does not exist")
+
     database.init_db()
 
 @app.get("/prize-status")
@@ -343,47 +371,16 @@ async def accept_winner(participant_id: int):
 # Add health check endpoint
 @app.get("/health")
 async def health_check():
-    """Detailed health check endpoint for monitoring."""
+    """Health check endpoint"""
     try:
-        static_dir = BASE_DIR / "static"
-        templates_dir = BASE_DIR / "templates"
-        data_dir = BASE_DIR / "data"
-        
         return {
             "status": "healthy",
-            "timestamp": datetime.now().isoformat(),
-            "environment": {
-                "debug": DEBUG,
-                "port": PORT,
-                "python_path": sys.path,
-                "cwd": os.getcwd(),
-                "base_dir": str(BASE_DIR)
-            },
-            "directories": {
-                "static_dir": {
-                    "path": str(static_dir),
-                    "exists": static_dir.exists(),
-                    "contents": [str(f.relative_to(static_dir)) for f in static_dir.glob('**/*') if f.is_file()] if static_dir.exists() else []
-                },
-                "templates_dir": {
-                    "path": str(templates_dir),
-                    "exists": templates_dir.exists(),
-                    "contents": [f.name for f in templates_dir.glob('*') if f.is_file()] if templates_dir.exists() else []
-                },
-                "data_dir": {
-                    "path": str(data_dir),
-                    "exists": data_dir.exists(),
-                    "contents": [f.name for f in data_dir.glob('*') if f.is_file()] if data_dir.exists() else []
-                }
-            }
+            "static_dir_exists": STATIC_DIR.exists(),
+            "templates_dir_exists": TEMPLATES_DIR.exists(),
+            "cwd": os.getcwd(),
+            "base_dir": str(BASE_DIR),
+            "python_path": sys.path
         }
     except Exception as e:
-        logger.exception("Health check failed")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "unhealthy",
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
-        )
+        logger.error(f"Health check failed: {str(e)}")
+        return {"status": "unhealthy", "error": str(e)}
