@@ -1,0 +1,836 @@
+/* Modern variables */
+:root {
+    --primary-color: #4f46e5;
+    --primary-rgb: 79, 70, 229;
+    --secondary-color: #818cf8;
+    --background: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    background: var(--background);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.container {
+    max-width: 1400px;
+}
+
+/* Modern card design */
+.participant-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+}
+
+.participant-card.highlight {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(var(--primary-rgb), 0.3);
+    border: 3px solid var(--primary-color);
+    z-index: 2;
+    opacity: 1 !important;
+}
+
+.participant-card:hover {
+    transform: translateY(-5px);
+}
+
+.participant-card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+}
+
+.participant-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1f2937;
+    text-align: center;
+}
+
+/* Draw button styling */
+.draw-btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+.draw-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.1);
+}
+
+.draw-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Winner modal styling */
+.modal-content {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: none;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+
+.modal-header {
+    border-bottom: none;
+    padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.winner-photo {
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+}
+
+.winner-name {
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+/* Animation classes */
+.selecting {
+    animation: pulse 0.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Confetti container */
+.confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Winner animation */
+.winner-animation {
+    animation: winner-pulse 2s infinite;
+}
+
+@keyframes winner-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Modal animation */
+.modal.fade .modal-dialog {
+    transform: scale(0.7);
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* Celebration text animation */
+.celebration-text {
+    animation: celebrate 1s ease-in-out infinite;
+    background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+@keyframes celebrate {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.final-selection {
+    animation: finalPulse 1s infinite;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    transform-origin: center;
+    z-index: 3;
+}
+
+@keyframes finalPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Name display */
+.name-display {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    transform: translateY(-100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.name-display.active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.name-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.name-label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.current-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    min-width: 200px;
+}
+
+/* Enhanced selection animation */
+.participant-card.highlight {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(var(--primary-rgb), 0.3);
+    border: 3px solid var(--primary-color);
+    z-index: 2;
+}
+
+.participant-card:not(.highlight) {
+    opacity: 0.6;
+    transform: scale(0.95);
+}
+
+.participant-card {
+    transition: all 0.2s ease-out;
+}
+
+.selection-active .participant-card {
+    transition: all 0.15s ease-out;
+}
+
+/* Selection state styles */
+.selection-active .participant-card:not(.highlight) {
+    opacity: 0.6;
+    transform: scale(0.95);
+    transition: all 0.15s ease-out;
+}
+
+/* Final selection animation */
+.participant-card.final-selection {
+    animation: finalPulse 1s infinite;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    transform-origin: center;
+    z-index: 3;
+}
+
+/* Enhanced transition handling */
+.selection-active .participant-card {
+    transition: all 0.15s ease-out;
+}
+
+.participant-card:not(.selection-active) {
+    transition: all 0.3s ease;
+}
+
+/* Ensure smooth transitions */
+.participant-card * {
+    transition: inherit;
+}
+
+/* Prize status styles */
+.prize-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(var(--primary-rgb), 0.05);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.current-prize-type {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.prize-counts {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.prize-count {
+    background: rgba(var(--primary-rgb), 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.prize-label {
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+/* Style for previous winners */
+.participant-card.previous-winner {
+    opacity: 0.5;
+    pointer-events: none;
+    position: relative;
+}
+
+.participant-card.previous-winner::after {
+    content: "Winner";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 1rem;
+    border-radius: 4px;
+    font-weight: 600;
+    z-index: 2;
+}
+
+/* Header styles */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.app-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* Prize status styles */
+.prize-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(var(--primary-rgb), 0.05);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.current-prize {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-right: 1.5rem;
+    border-right: 2px solid rgba(var(--primary-rgb), 0.1);
+}
+
+.prize-label {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.prize-value {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.prize-counts {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.prize-count {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.count-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.count-icon.small { background-color: #10B981; }
+.count-icon.medium { background-color: #6366F1; }
+.count-icon.big { background-color: #EC4899; }
+
+/* Draw button styles */
+.draw-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+}
+
+.draw-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
+}
+
+.draw-btn:active {
+    transform: translateY(1px);
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+/* Main content adjustment */
+.main-content {
+    padding-top: 90px; /* header height + extra padding */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header-content {
+        padding: 0 1rem;
+    }
+
+    .prize-status {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .current-prize {
+        padding-right: 0.5rem;
+        border-right: none;
+        padding-bottom: 0;
+        margin-right: auto;
+    }
+
+    .prize-counts {
+        gap: 0.75rem;
+    }
+
+    .reset-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+    }
+
+    .btn-text {
+        display: none;
+    }
+
+    .draw-btn {
+        padding: 0.75rem;
+    }
+}
+
+/* Animation for header scroll */
+@media (min-width: 769px) {
+    .app-header.scrolled {
+        height: 60px;
+        background: rgba(255, 255, 255, 0.95);
+    }
+}
+
+#resetBtn {
+    transition: all 0.3s ease;
+}
+
+#resetBtn:hover {
+    transform: rotate(180deg);
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Add reset button styles */
+.reset-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid rgba(var(--primary-rgb), 0.2);
+    border-radius: 50%;
+    background: transparent;
+    color: #666;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 0.5rem;
+}
+
+.reset-btn:hover {
+    transform: rotate(180deg);
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+/* Zoom effect for current winner only */
+.participant-card.highlight,
+.participant-card.final-selection {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(var(--primary-rgb), 0.3);
+    border: 3px solid var(--primary-color);
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+/* Keep opacity 100% for both current and previous winners */
+.participant-card.highlight,
+.participant-card.final-selection,
+.participant-card.previous-winner {
+    opacity: 1 !important;
+}
+
+/* Non-winners fade during selection */
+.selection-active .participant-card:not(.highlight):not(.final-selection):not(.previous-winner) {
+    opacity: 0.6;
+}
+
+/* Previous winners - only border highlight, no zoom */
+.participant-card.previous-winner {
+    border: 3px solid var(--primary-color);
+    opacity: 1 !important;
+    transform: scale(1);
+    transition: all 0.3s ease;
+}
+
+/* Enhanced Grand Finale Styles */
+.grand-finale {
+    background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%);
+    color: #fff;
+    border: 5px solid #ffd700;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+    animation: modalPulse 2s infinite;
+}
+
+@keyframes modalPulse {
+    0% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.5); }
+    50% { box-shadow: 0 0 70px rgba(255, 215, 0, 0.7); }
+    100% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.5); }
+}
+
+.grand-winner {
+    animation: grandWinnerPulse 2s infinite !important;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.8) !important;
+}
+
+@keyframes grandWinnerPulse {
+    0% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+    50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(255, 215, 0, 1); }
+    100% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+}
+
+.grand-trophy {
+    font-size: 6em;
+    color: #ffd700;
+    animation: trophyGlow 2s infinite alternate;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+}
+
+@keyframes trophyGlow {
+    from { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); transform: scale(1); }
+    to { text-shadow: 0 0 40px rgba(255, 215, 0, 1); transform: scale(1.1); }
+}
+
+.grand-winner-name {
+    font-size: 3em;
+    font-weight: bold;
+    margin: 20px 0;
+    color: #ffd700;
+    text-shadow: 
+        0 0 10px rgba(255, 215, 0, 0.8),
+        2px 2px 4px rgba(0, 0, 0, 0.5);
+    animation: nameGlow 2s infinite alternate;
+}
+
+@keyframes nameGlow {
+    from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 2px 2px 4px rgba(0, 0, 0, 0.5); }
+    to { text-shadow: 0 0 20px rgba(255, 215, 0, 1), 2px 2px 4px rgba(0, 0, 0, 0.5); }
+}
+
+.winner-frame {
+    position: relative;
+    padding: 10px;
+    background: linear-gradient(45deg, #ffd700, #ff9500);
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 300px;
+    transform: scale(0);
+    animation: winnerReveal 1s forwards;
+}
+
+.grand-winner-photo {
+    border-radius: 5px;
+    border: 3px solid white;
+}
+
+.grand-winner-name {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 20px 0;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    animation: textReveal 1s 0.5s forwards;
+}
+
+.celebration-text {
+    font-size: 1.2em;
+    margin-top: 20px;
+    opacity: 0;
+    animation: textReveal 1s 1s forwards;
+}
+
+.prize-description {
+    color: #ffd700;
+    font-style: italic;
+}
+
+@keyframes winnerReveal {
+    0% {
+        transform: scale(0) rotate(-10deg);
+    }
+    50% {
+        transform: scale(1.2) rotate(5deg);
+    }
+    100% {
+        transform: scale(1) rotate(0);
+    }
+}
+
+@keyframes textReveal {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Add sparkle effect */
+.sparkle {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.sparkle span {
+    position: absolute;
+    background: #ffd700;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    animation: sparkleAnim 1s linear infinite;
+}
+
+@keyframes sparkleAnim {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1) rotate(180deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Draw Counter Styles */
+.draw-counter-container {
+    text-align: center;
+    margin: 20px auto;
+    padding: 15px;
+    max-width: 300px;
+}
+
+.draw-counter {
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    padding: 15px 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    color: white;
+    font-family: 'Arial', sans-serif;
+}
+
+.draw-counter-label {
+    font-size: 1.2em;
+    margin-right: 10px;
+}
+
+.draw-count {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.draw-counter-total {
+    font-size: 1.4em;
+    color: #ddd;
+    margin-left: 5px;
+}
+
+.current-selection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 15px;
+    background: rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.draw-count-display {
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.95em;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.draw-number {
+    color: #ffd700;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    font-family: 'Arial', sans-serif;
+    padding: 0 2px;
+}
+
+.draw-total {
+    opacity: 0.9;
+    font-size: 0.9em;
+    color: #e0e0e0;
+}
+
+.draw-label {
+    font-weight: normal;
+    margin-right: 2px;
+}
+
+/* Add subtle hover effect */
+.draw-count-display:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+}
+
+/* Add subtle pulse animation when count updates */
+@keyframes countUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.draw-count-update {
+    animation: countUpdate 0.3s ease-in-out;
+}
+
+.participant-card.absent {
+    position: relative;
+    opacity: 0.7;
+}
+
+.participant-card.absent::after {
+    content: 'ABSENT';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    background-color: rgba(220, 53, 69, 0.9);  /* Bootstrap danger color */
+    color: white;
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 0.9em;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
