@@ -15,14 +15,22 @@ import logging
 import database
 
 # Set debug mode
-DEBUG = os.environ.get("DEBUG", "true").lower() == "true"
+DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
 
-app = FastAPI(debug=DEBUG)
+# Get port from environment variable with fallback to 8000
+PORT = int(os.environ.get("PORT", 8000))
 
-# Configure CORS
+app = FastAPI(
+    debug=DEBUG,
+    title="Lottery Draw Application",
+    description="A web application for conducting lottery draws",
+    version="1.0.0"
+)
+
+# Configure CORS with more specific settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # In production, you might want to restrict this
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,8 +54,8 @@ class CustomStaticFiles(StaticFiles):
 # Mount static files with custom config
 app.mount("/static", CustomStaticFiles(directory="static", html=True), name="static")
 
-# Templates
-templates = Jinja2Templates(directory="templates")
+# Templates with absolute path
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 # Type definition for participant
 Participant = Dict[str, str]
@@ -311,3 +319,9 @@ async def accept_winner(participant_id: int):
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# Add health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring."""
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
