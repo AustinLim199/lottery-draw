@@ -32,10 +32,11 @@ DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
 # Get port from environment variable with fallback to 8000
 PORT = int(os.environ.get("PORT", 8000))
 
+# Log startup information
 logger.info(f"Starting application with DEBUG={DEBUG}, PORT={PORT}")
 logger.info(f"Base directory: {BASE_DIR}")
 logger.info(f"Current working directory: {os.getcwd()}")
-logger.info(f"Directory contents: {os.listdir(BASE_DIR)}")
+logger.info(f"Python path: {sys.path}")
 
 app = FastAPI(
     debug=DEBUG,
@@ -58,15 +59,21 @@ try:
     static_dir = BASE_DIR / "static"
     logger.info(f"Mounting static files from: {static_dir}")
     logger.info(f"Static directory exists: {static_dir.exists()}")
-    logger.info(f"Static directory contents: {[f.name for f in static_dir.glob('*') if f.is_file()]}")
-    app.mount("/static", StaticFiles(directory=str(static_dir), html=True), name="static")
+    if static_dir.exists():
+        logger.info(f"Static directory contents: {[f.name for f in static_dir.glob('**/*') if f.is_file()]}")
+        app.mount("/static", StaticFiles(directory=str(static_dir), html=True), name="static")
+    else:
+        raise Exception(f"Static directory not found at {static_dir}")
 
     # Set up templates
     templates_dir = BASE_DIR / "templates"
     logger.info(f"Setting up templates from: {templates_dir}")
     logger.info(f"Templates directory exists: {templates_dir.exists()}")
-    logger.info(f"Templates directory contents: {[f.name for f in templates_dir.glob('*') if f.is_file()]}")
-    templates = Jinja2Templates(directory=str(templates_dir))
+    if templates_dir.exists():
+        logger.info(f"Templates directory contents: {[f.name for f in templates_dir.glob('*') if f.is_file()]}")
+        templates = Jinja2Templates(directory=str(templates_dir))
+    else:
+        raise Exception(f"Templates directory not found at {templates_dir}")
 except Exception as e:
     logger.error(f"Error setting up static files or templates: {str(e)}")
     logger.exception("Full traceback:")
@@ -154,20 +161,25 @@ def get_prize_status() -> Dict:
 
 @app.get("/")
 async def read_root(request: Request):
-    # Get initial prize status
-    prize_status = database.get_prize_status()  # No need for await since it's not async
-    winners = database.get_winners()  # Get current winners
-    participants = load_participants()  # Load participants data
-    
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "prize_status": prize_status,
-            "winners": winners,
-            "participants": participants  # Pass participants to template
-        }
-    )
+    try:
+        # Get initial prize status
+        prize_status = database.get_prize_status()
+        winners = database.get_winners()
+        participants = load_participants()
+        
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "prize_status": prize_status,
+                "winners": winners,
+                "participants": participants
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error in read_root: {str(e)}")
+        logger.exception("Full traceback:")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/draw")
 async def draw():
@@ -335,6 +347,8 @@ async def health_check():
     try:
         static_dir = BASE_DIR / "static"
         templates_dir = BASE_DIR / "templates"
+        data_dir = BASE_DIR / "data"
+        
         return {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
@@ -343,18 +357,23 @@ async def health_check():
                 "port": PORT,
                 "python_path": sys.path,
                 "cwd": os.getcwd(),
+                "base_dir": str(BASE_DIR)
             },
             "directories": {
-                "base_dir": str(BASE_DIR),
                 "static_dir": {
                     "path": str(static_dir),
                     "exists": static_dir.exists(),
-                    "contents": [f.name for f in static_dir.glob("*")] if static_dir.exists() else []
+                    "contents": [str(f.relative_to(static_dir)) for f in static_dir.glob('**/*') if f.is_file()] if static_dir.exists() else []
                 },
                 "templates_dir": {
                     "path": str(templates_dir),
                     "exists": templates_dir.exists(),
-                    "contents": [f.name for f in templates_dir.glob("*")] if templates_dir.exists() else []
+                    "contents": [f.name for f in templates_dir.glob('*') if f.is_file()] if templates_dir.exists() else []
+                },
+                "data_dir": {
+                    "path": str(data_dir),
+                    "exists": data_dir.exists(),
+                    "contents": [f.name for f in data_dir.glob('*') if f.is_file()] if data_dir.exists() else []
                 }
             }
         }
