@@ -8,17 +8,32 @@ import json
 import random
 import asyncio
 import os
+import sys
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from pathlib import Path
 import logging
 import database
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logger = logging.getLogger(__name__)
+
+# Get base directory
+BASE_DIR = Path(__file__).resolve().parent
+
 # Set debug mode
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
 
 # Get port from environment variable with fallback to 8000
 PORT = int(os.environ.get("PORT", 8000))
+
+logger.info(f"Starting application with DEBUG={DEBUG}, PORT={PORT}")
+logger.info(f"Base directory: {BASE_DIR}")
 
 app = FastAPI(
     debug=DEBUG,
@@ -27,41 +42,31 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS with more specific settings
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, you might want to restrict this
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class CustomStaticFiles(StaticFiles):
-    def is_not_modified(self, response_headers, request_headers) -> bool:
-        if DEBUG:  # Disable caching in debug mode
-            return False
-        return super().is_not_modified(response_headers, request_headers)
-    
-    async def get_response(self, path: str, scope):
-        response = await super().get_response(path, scope)
-        if DEBUG:
-            # Add cache control headers in debug mode
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-            response.headers["Pragma"] = "no-cache"
-            response.headers["Expires"] = "0"
-        return response
+try:
+    # Mount static files
+    static_dir = BASE_DIR / "static"
+    logger.info(f"Mounting static files from: {static_dir}")
+    app.mount("/static", StaticFiles(directory=str(static_dir), html=True), name="static")
 
-# Mount static files with custom config
-app.mount("/static", CustomStaticFiles(directory="static", html=True), name="static")
-
-# Templates with absolute path
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+    # Set up templates
+    templates_dir = BASE_DIR / "templates"
+    logger.info(f"Setting up templates from: {templates_dir}")
+    templates = Jinja2Templates(directory=str(templates_dir))
+except Exception as e:
+    logger.error(f"Error setting up static files or templates: {e}")
+    raise
 
 # Type definition for participant
 Participant = Dict[str, str]
-
-# Get base directory
-BASE_DIR = Path(__file__).resolve().parent
 
 def load_participants() -> List[Participant]:
     """Load and validate participant data from JSON file."""
@@ -95,10 +100,6 @@ def load_participants() -> List[Participant]:
 
 # Load participant data
 participants = load_participants()
-
-# Set up logging
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Define prize types
 class PrizeType(Enum):

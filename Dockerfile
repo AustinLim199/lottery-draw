@@ -1,5 +1,6 @@
 FROM python:3.11.2-slim
 
+# Set working directory
 WORKDIR /app
 
 # Install system dependencies
@@ -11,15 +12,19 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY app/ .
+# Copy the entire application
+COPY . .
 
 # Set environment variables
 ENV DEBUG=false
 ENV PORT=8000
+ENV PYTHONPATH=/app
+
+# Create necessary directories if they don't exist
+RUN mkdir -p /app/app/static/images
 
 # Expose the port
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
