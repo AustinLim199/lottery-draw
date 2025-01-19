@@ -17,7 +17,7 @@ from . import database
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.StreamHandler(sys.stdout)]
 )
@@ -34,6 +34,8 @@ PORT = int(os.environ.get("PORT", 8000))
 
 logger.info(f"Starting application with DEBUG={DEBUG}, PORT={PORT}")
 logger.info(f"Base directory: {BASE_DIR}")
+logger.info(f"Current working directory: {os.getcwd()}")
+logger.info(f"Directory contents: {os.listdir(BASE_DIR)}")
 
 app = FastAPI(
     debug=DEBUG,
@@ -55,14 +57,19 @@ try:
     # Mount static files
     static_dir = BASE_DIR / "static"
     logger.info(f"Mounting static files from: {static_dir}")
+    logger.info(f"Static directory exists: {static_dir.exists()}")
+    logger.info(f"Static directory contents: {[f.name for f in static_dir.glob('*') if f.is_file()]}")
     app.mount("/static", StaticFiles(directory=str(static_dir), html=True), name="static")
 
     # Set up templates
     templates_dir = BASE_DIR / "templates"
     logger.info(f"Setting up templates from: {templates_dir}")
+    logger.info(f"Templates directory exists: {templates_dir.exists()}")
+    logger.info(f"Templates directory contents: {[f.name for f in templates_dir.glob('*') if f.is_file()]}")
     templates = Jinja2Templates(directory=str(templates_dir))
 except Exception as e:
-    logger.error(f"Error setting up static files or templates: {e}")
+    logger.error(f"Error setting up static files or templates: {str(e)}")
+    logger.exception("Full traceback:")
     raise
 
 # Type definition for participant
@@ -324,5 +331,40 @@ async def accept_winner(participant_id: int):
 # Add health check endpoint
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for monitoring."""
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    """Detailed health check endpoint for monitoring."""
+    try:
+        static_dir = BASE_DIR / "static"
+        templates_dir = BASE_DIR / "templates"
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "environment": {
+                "debug": DEBUG,
+                "port": PORT,
+                "python_path": sys.path,
+                "cwd": os.getcwd(),
+            },
+            "directories": {
+                "base_dir": str(BASE_DIR),
+                "static_dir": {
+                    "path": str(static_dir),
+                    "exists": static_dir.exists(),
+                    "contents": [f.name for f in static_dir.glob("*")] if static_dir.exists() else []
+                },
+                "templates_dir": {
+                    "path": str(templates_dir),
+                    "exists": templates_dir.exists(),
+                    "contents": [f.name for f in templates_dir.glob("*")] if templates_dir.exists() else []
+                }
+            }
+        }
+    except Exception as e:
+        logger.exception("Health check failed")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+        )
